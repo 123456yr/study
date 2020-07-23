@@ -1,0 +1,22 @@
+{
+  "name": "blog-1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=dev nodemon ./bin/www.js",
+    "prd": "cross-env NODE_ENV=production nodemon ./bin/www.js"
+  },
+  "devDependencies": {
+    "cross-env": "^5.2.0",
+    "nodemon": "^1.18.9"
+  },
+  "dependencies": {
+    "mysql": "^2.18.1",
+    "redis": "^3.0.2",
+    "xss": "^1.0.7"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

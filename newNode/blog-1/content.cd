@@ -1,0 +1,101 @@
+### session 的问题
+1. 目前session直接是js变量，放在nodejs进程内存中
+第一，进程内存有限，访问量过大，内存暴增怎么办
+第二，正式线上运行是多进程，进程之间内存无法共享（每个进程都有一个session，第一次登录把信息存在的二进程，那么第二次登陆就登不上去了）
+操作系统会限制一个进程的内存，进程之间的内存是不能共享的
+
+redis 最常用的缓存数据库，数据存放在内存中
+放在内存中的优点：读写快，缺点：昂贵，断电丢失
+相比mysql（硬盘数据库），访问速度块（内存和硬盘不是一个数量级的）
+但是成本高，存储量小
+
+将web server和Redis拆分成两个单独的服务
+双方都是独立的，都是可扩展的（例如都扩展成集群）
+（包括mysql，也是一个单独的服务，也可扩展）
+
+启动redis命令
+redis-server.exe redis.windows.conf
+在另一个cmd窗口： redis-cli.exe -h 127.0.0.1 -p 6379
+
+为何session适合用Redis
+session访问频繁，对性能要求极高
+session可不考虑断电丢失数据的问题
+session数据量不会太大
+
+安装http://www.runoob.com/redis/redis-install.html
+
+#### 前端页面联调
+npm install http-server -g
+http-server -p 8001
+
+#### nginx 介绍
+高性能的web服务器，开源免费
+一般用于做静态服务、负载均衡
+反向代理
+
+nginx下载： http://nginx.org/en/download.html
+开启命令：nginx.exe
+#### 登陆-总结
+
+cookie 是什么？session是什么？如何实现登陆？
+cookie是会话，会被http的请求携带到server端，用cookie做登陆的话有缺点就是会暴露用户的用户名等信息，非常危险
+session就是解决cookie登陆暴露的一些问题，是一种解决方案
+用cookie和session实现登陆：cookie存储userId, session存储userId对应的用户名信息，第一次登录时，没有userId，登陆成功后，后台设置(res.setHeader('Set-Cookie', `userId=${userId}; path=\; httpOnly; expires=xxxxx`)),将userId对应的username用户信息存储到全局变量中，这时发送的请求中不携带cookie，在返回的响应中有set-cookie; 以后再访问需要登陆的页面时，只要请求中携带的cookie没有过期，通过携带的cookie再全局变量sessiondata中找到对应的username，就可以通过验证
+
+
+redis在这里扮演什么角色？有什么核心价值
+redis是内存数据库，如果把session验证信息存放在全局变量中，当程序重新启动全局变量中内容就会清空，用户就会重新登陆，体验不好。应该把session存在redis中，redis是内存数据库，读写快，对于频繁的操作session也可以满足，并且内容不容易丢失，只有断电时才会丢失
+
+
+nginx的反向代理配置，联调过程中的作用
+server {
+        listen       8080;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        #location / {
+        #    root   html;
+        #    index  index.html index.htm;
+        #}
+	location / {
+		proxy_pass http://localhost:8001;
+	}
+	location /api/ {
+		proxy_pass http://localhost:8000;
+		proxy_set_header Host $host;
+	}
+
+联调过程中的作用
+反向代理，其实客户端对代理是无感知的，因为客户端不需要任何配置就可以访问，我们只需要就请求发送到反向代理服务器，有反向代理服务器去选择目标服务器获取数据后，在返回给客户端，此时反向代理服务器和目标服务器对外就是一个服务器，暴露的是代理服务器地址，隐藏了真是服务器IP地址
+
+IO操作的性能瓶颈（IO就是in 和out,输入输出）
+IO包括“网络IO”和“文件IO”  当读写的文件太大，比如一个电影
+相比于CPU计算和内存读写，IO的突出特点就是：慢！
+如何在有限的硬件资源下提高IO的操作效率？
+
+安全
+sql注入：窃取数据库内容(通过输入框输入sql语句, 通过mysql提供的escape函数来解决，escape函数将一些特殊字符转义\')
+XSS攻击：窃取前端的cookie内容,(通过输入框输入js,比如<script>alert(document.cookie)</script>,通过使用xss库来解决，将特殊字符转义)
+密码加密：保障用户信息安全
+
+总结
+开发了那些功能模块，完整的流程
+处理http接口，连接数据库，实现登陆
+用到了那些核心知识点
+server和前端的区别
+
+### express
+全局安装express脚手架
+npm install express-generator -g 
+初始化
+express 项目名
+npm install
+npm start
+npm i nodemon cross-env --save-dev
+
+
+
+
